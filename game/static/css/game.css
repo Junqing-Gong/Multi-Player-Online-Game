@@ -21,7 +21,7 @@
     font-style: italic;
     padding: 2vh;
     text-align: center;
-    background-color: rgba(39,21,28, 0.6);
+    background-color: rgba(39, 21, 28, 0.6);
     border-radius: 10px;
     letter-spacing: 0.5vw;
     cursor: pointer;
@@ -30,4 +30,10 @@
 .ac-game-menu-field-item:hover {
     transform: scale(1.2);
     transition: 100ms;
+}
+
+.ac-game-playground {
+    width: 100%;
+    height: 100%;
+    user-select: none;
 }
