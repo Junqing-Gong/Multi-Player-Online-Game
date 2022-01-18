@@ -128,7 +128,7 @@ class GameMap extends AcGameObject {
     constructor(playground) {
         super();
         this.playground = playground;
-        this.$canvas = $(`<canvas></canvas>`);
+        this.$canvas = $(`<canvas tabindex=0></canvas>`);
         this.ctx = this.$canvas[0].getContext('2d');
         this.ctx.canvas.width = this.playground.width;
         this.ctx.canvas.height = this.playground.height;
@@ -136,6 +136,7 @@ class GameMap extends AcGameObject {
     }
 
     start() {
+        this.$canvas.focus();
     }
 
     resize() {
@@ -346,7 +347,7 @@ class Player extends AcGameObject {
             }
         });
 
-        $(window).keydown(function(e) {
+        this.playground.game_map.$canvas.keydown(function(e) {
              // console.log(e.which)
 
             if (outer.playground.state !== "fighting")
