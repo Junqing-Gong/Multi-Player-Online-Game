@@ -5,8 +5,6 @@ class AcGamePlayground {
 
         this.hide();
         this.root.$ac_game.append(this.$playground);
-
-        this.start();
     }
 
     get_random_color() {
@@ -41,6 +39,9 @@ class AcGamePlayground {
         this.game_map = new GameMap(this);
 
         this.mode = mode;
+        this.state = "waiting" // waiting ->fighting -> over
+        this.notice_board = new NoticeBoard(this);
+        this.player_count = 0;
         this.resize();
 
         this.players = [];
