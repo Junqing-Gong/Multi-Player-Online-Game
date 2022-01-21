@@ -110,9 +110,9 @@ class MultiPlayer(AsyncWebsocketConsumer):
                 player.save();
             for player in players:
                 if player['hp'] <= 0:
-                    await database_sync_to_async(db_update_player_score)(player['username'], -5) # sync同步->async异步，一定要加await
+                    await database_sync_to_async(db_update_player_score)(player['username'], 0) # sync同步->async异步，一定要加await
                 else:
-                    await database_sync_to_async(db_update_player_score)(player['username'], 10)
+                    await database_sync_to_async(db_update_player_score)(player['username'], 0)
 
         await self.channel_layer.group_send(
             self.room_name,

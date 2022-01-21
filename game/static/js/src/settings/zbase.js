@@ -3,7 +3,7 @@ class Settings {
         this.root = root;
         this.platform = "WEB";
         if (this.root.AcWingOS) this.platform = "ACAPP";
-        this.uername = "";
+        this.username = "";
         this.photo = "";
 
         this.$settings = $(`
@@ -268,12 +268,12 @@ class Settings {
                 platform:outer.platform,
             },
             success: function(resp) {
-                if (resp.result === "success") {
+                if (resp.result === "success") { // 若是已经登录,获取信息
                     outer.username = resp.username;
                     outer.photo = resp.photo;
                     outer.hide();
                     outer.root.menu.show();
-                } else {
+                } else { // 若是还未登录,弹出登录窗口
                     outer.login();
                 }
             }

@@ -21,7 +21,7 @@ class FireBall extends AcGameObject {
 
     update() {
         if (this.move_length < this.eps) {
-            this.destroy();
+            this.destroy(); // 调用的父类AcGameObject的destroy函数
             return false;
         }
 
@@ -75,7 +75,7 @@ class FireBall extends AcGameObject {
         this.destroy();
     }
 
-    render() {
+    render() { // 画出火球
         let scale = this.playground.scale;
         this.ctx.beginPath();
         this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, Math.PI * 2, false);

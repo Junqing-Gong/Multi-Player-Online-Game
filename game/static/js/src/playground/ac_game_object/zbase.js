@@ -1,4 +1,4 @@
-let AC_GAME_OBJECTS = [];
+let AC_GAME_OBJECTS = []; // 全局变量
 
 class AcGameObject {
     constructor() {
