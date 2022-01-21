@@ -61,7 +61,7 @@ class Player extends AcGameObject {
     add_listening_events() {
         let outer = this;
 
-        this.playground.game_map.$canvas.on("contextmenu", function() {
+        this.playground.game_map.$canvas.on("contextmenu", function() { // 阻止浏览器右键的菜单contextmenu出现
             return false;
         });
 
@@ -234,6 +234,7 @@ class Player extends AcGameObject {
 
     update_win() {
         if (this.playground.state === "fighting" && this.character === "me" && this.playground.players.length === 1) {
+            this.playground.notice_board.write("Game Over");
             this.playground.state = "over";
             this.playground.score_board.win();
         }

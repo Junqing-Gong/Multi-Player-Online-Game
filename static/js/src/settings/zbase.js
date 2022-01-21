@@ -3,7 +3,7 @@ class Settings {
         this.root = root;
         this.platform = "WEB";
         if (this.root.AcWingOS) this.platform = "ACAPP";
-        this.uername = "";
+        this.username = "";
         this.photo = "";
 
         this.$settings = $(`
@@ -127,6 +127,12 @@ class Settings {
     add_listening_events_login() {
         let outer = this;
 
+        this.$login.keydown(function(e) {
+            if (e.which === 13){ // enter
+                outer.login_on_remote();
+            }
+        });
+
         this.$login_register.click(function() {
              outer.register();
         });
@@ -137,6 +143,13 @@ class Settings {
 
     add_listening_events_register() {
         let outer = this;
+
+        this.$register.keydown(function(e) {
+            if (e.which === 13) { // enter
+                outer.register_on_remote();
+            }
+        });
+
         this.$register_login.click(function() {
              outer.login();
         });
@@ -268,12 +281,12 @@ class Settings {
                 platform:outer.platform,
             },
             success: function(resp) {
-                if (resp.result === "success") {
+                if (resp.result === "success") { // 若是已经登录,获取信息
                     outer.username = resp.username;
                     outer.photo = resp.photo;
                     outer.hide();
                     outer.root.menu.show();
-                } else {
+                } else { // 若是还未登录,弹出登录窗口
                     outer.login();
                 }
             }

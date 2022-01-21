@@ -60,10 +60,12 @@ class Player extends AcGameObject {
 
     add_listening_events() {
         let outer = this;
-        this.playground.game_map.$canvas.on("contextmenu", function() {
+
+        this.playground.game_map.$canvas.on("contextmenu", function() { // 阻止浏览器右键的菜单contextmenu出现
             return false;
         });
-        this.playground.game_map.$canvas.mousedown(function(e) {
+
+        this.playground.game_map.$canvas.mousedown(function(e) { // 绑定鼠标点击事件
             if (outer.playground.state !== "fighting")
                 return true;
 
@@ -104,7 +106,7 @@ class Player extends AcGameObject {
             }
         });
 
-        this.playground.game_map.$canvas.keydown(function(e) {
+        this.playground.game_map.$canvas.keydown(function(e) { // 绑定键盘点击事件
             // console.log(e.which)
 
             if (e.which === 13) { // enter
@@ -232,6 +234,7 @@ class Player extends AcGameObject {
 
     update_win() {
         if (this.playground.state === "fighting" && this.character === "me" && this.playground.players.length === 1) {
+            this.playground.notice_board.write("Game Over");
             this.playground.state = "over";
             this.playground.score_board.win();
         }

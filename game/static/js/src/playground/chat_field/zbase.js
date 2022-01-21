@@ -44,6 +44,10 @@ class ChatField {
         let outer = this;
         this.$history.fadeIn();
 
+        this.$history.on("contextmenu", function() {
+            return false;
+        });
+
         if (this.func_id) clearTimeout(this.func_id);
 
         this.func_id = setTimeout(function() {

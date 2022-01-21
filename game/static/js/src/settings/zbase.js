@@ -127,6 +127,12 @@ class Settings {
     add_listening_events_login() {
         let outer = this;
 
+        this.$login.keydown(function(e) {
+            if (e.which === 13){ // enter
+                outer.login_on_remote();
+            }
+        });
+
         this.$login_register.click(function() {
              outer.register();
         });
@@ -137,6 +143,13 @@ class Settings {
 
     add_listening_events_register() {
         let outer = this;
+
+        this.$register.keydown(function(e) {
+            if (e.which === 13) { // enter
+                outer.register_on_remote();
+            }
+        });
+
         this.$register_login.click(function() {
              outer.login();
         });
