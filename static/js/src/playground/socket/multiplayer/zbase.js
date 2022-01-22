@@ -32,6 +32,10 @@ class MultiPlayerSocket {
                 outer.receive_blink(uuid, data.tx, data.ty);
             } else if (event === "message") {
                 outer.receive_message(data.username, data.text);
+            } else if (event === "shoot_frozenball") {
+                outer.receive_shoot_frozenball(uuid, data.tx, data.ty, data.ball_uuid);
+            } else if (event === "frozen") {
+                outer.receive_frozen(uuid, data.attackee_uuid, data.x, data.y, data.ball_uuid);
             }
         };
     }
@@ -171,6 +175,47 @@ class MultiPlayerSocket {
 
     receive_message(username, text) {
         this.playground.chat_field.add_message(username, text);
+    }
+
+    send_shoot_frozenball(tx, ty, ball_uuid) {
+        let outer = this;
+
+        this.ws.send(JSON.stringify({
+            'event': "shoot_frozenball",
+            'uuid': outer.uuid,
+            'tx': tx,
+            'ty': ty,
+            'ball_uuid': ball_uuid,
+        }));
+    }
+
+    receive_shoot_frozenball(uuid, tx, ty, ball_uuid) {
+        let player = this.get_player(uuid);
+
+        if (player) {
+            let frozenball = player.shoot_frozenball(tx, ty);
+            frozenball.uuid = ball_uuid; // 所有窗口中的一个冰球对应的uuid相同
+        }
+    }
+
+    send_frozen(attackee_uuid, x, y, ball_uuid) {
+        let outer = this;
+        this.ws.send(JSON.stringify({
+            'event': "frozen",
+            'uuid': outer.uuid,
+            'attackee_uuid': attackee_uuid,
+            'x': x,
+            'y': y,
+            'ball_uuid': ball_uuid,
+        }));
+    }
+
+    receive_frozen(uuid, attackee_uuid, x, y, ball_uuid) {
+        let attacker = this.get_player(uuid);
+        let attackee = this.get_player(attackee_uuid);
+        if (attacker && attackee) {
+            attackee.receive_frozen(x, y, ball_uuid, attacker);
+        }
     }
 
 }

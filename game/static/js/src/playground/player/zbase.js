@@ -21,7 +21,8 @@ class Player extends AcGameObject {
         this.friction = 0.9;
         this.spent_time = 0;
         this.fireballs = [];
-
+        this.frozenballs = [];
+        this.frozen_time = 0;
         this.cur_skill = null;
 
         if (this.character !== "robot") {
@@ -37,6 +38,10 @@ class Player extends AcGameObject {
             this.blink_coldtime = 5;
             this.blink_img = new Image();
             this.blink_img.src = "https://cdn.acwing.com/media/article/image/2021/12/02/1_daccabdc53-blink.png";
+
+            this.frozenball_coldtime = 5;
+            this.frozenball_img = new Image();
+            this.frozenball_img.src = "https://cdn.acwing.com/media/article/image/2021/12/02/1_9340c86053-fireball.png";
         }
     }
 
@@ -73,8 +78,10 @@ class Player extends AcGameObject {
             if (e.which === 3) {
                 let tx = (e.clientX - rect.left) / outer.playground.scale;
                 let ty = (e.clientY - rect.top) / outer.playground.scale;
-                outer.move_to(tx, ty);
+                if (outer.frozen_time > outer.eps)
+                    return false;
 
+                outer.move_to(tx, ty);
                 if (outer.playground.mode === "multi mode") {
                     outer.playground.mps.send_move_to(tx, ty);
                 }
@@ -90,7 +97,6 @@ class Player extends AcGameObject {
                     if (outer.playground.mode === "multi mode") {
                         outer.playground.mps.send_shoot_fireball(tx, ty, fireball.uuid);
                     }
-
                  } else if (outer.cur_skill === "blink") {
                     if (outer.blink_coldtime > outer.eps)
                         return false;
@@ -99,7 +105,14 @@ class Player extends AcGameObject {
                     if (outer.playground.mode === "multi mode") {
                         outer.playground.mps.send_blink(tx, ty);
                     }
+                 } else if (outer.cur_skill === "frozenball") {
+                    if (outer.frozenball_coldtime > outer.eps)
+                        return false;
 
+                    let frozenball = outer.shoot_frozenball(tx, ty);
+                    if (outer.playground.mode === "multi mode") {
+                        outer.playground.mps.send_shoot_frozenball(tx, ty, frozenball.uuid);
+                    }
                  }
 
                 outer.cur_skill = null;
@@ -130,11 +143,15 @@ class Player extends AcGameObject {
                     return true;
                 outer.cur_skill = "fireball";
                 return false;
-
-            } else if (e.which === 70) { // f
+            } else if (e.which === 87) { // w
                 if (outer.blink_coldtime > outer.eps)
                     return true;
                 outer.cur_skill = "blink";
+                return false;
+            } else if (e.which === 69) { // e
+                if (outer.frozen_coldtime > outer.eps)
+                    return true;
+                outer.cur_skill = "frozenball";
                 return false;
             }
         });
@@ -148,7 +165,7 @@ class Player extends AcGameObject {
         let color = "orange";
         let speed = 0.5;
         let move_length = 1;
-        let fireball = new FireBall(this.playground, this, x, y, radius, vx, vy, color, speed, move_length, 0.01);
+        let fireball = new FireBall(this.playground, this, x, y, radius, vx, vy, color, speed, move_length, 0.005);
         this.fireballs.push(fireball);
 
         if (this.username !== "龔")
@@ -178,6 +195,32 @@ class Player extends AcGameObject {
         this.move_length = 0; // 闪现完停下来
     }
 
+    shoot_frozenball(tx, ty) {
+        let x = this.x, y = this.y;
+        let radius = 0.01;
+        let angle = Math.atan2(ty - this.y, tx - this.x);
+        let vx = Math.cos(angle), vy = Math.sin(angle);
+        let color = "blue";
+        let speed = 0.5;
+        let move_length = 1;
+        let frozenball = new FrozenBall(this.playground, this, x, y, radius, vx, vy, color, speed, move_length);
+        this.frozenballs.push(frozenball);
+
+        this.frozenball_coldtime = 5;
+
+        return frozenball;
+    }
+
+    destroy_frozenball(uuid) {
+        for (let i = 0; i < this.frozenballs.length; i ++ ) {
+            let frozenball = this.frozenballs[i];
+            if (frozenball.uuid === uuid) {
+                frozenball.destroy();
+                break;
+            }
+        }
+    }
+
     get_dist(x1, y1, x2, y2) {
         let dx = x1 - x2;
         let dy = y1 - y2;
@@ -192,7 +235,7 @@ class Player extends AcGameObject {
     }
 
     is_attacked(angle, damage) {
-        for (let i = 0; i < 20 + Math.random() * 10; i ++ ) {
+        for (let i = 0; i < 20 + Math.random() * 10; i ++ ) { // 粒子效果
             let x = this.x, y = this.y;
             let radius = this.radius * Math.random() * 0.1;
             let angle = Math.PI * 2 * Math.random();
@@ -213,6 +256,11 @@ class Player extends AcGameObject {
         this.speed *= 0.8;
     }
 
+    is_frozen() {
+        this.move_length = 0;
+        this.frozen_time = 2;
+    }
+
     receive_attack(x, y, angle, damage, ball_uuid, attacker) {
         attacker.destroy_fireball(ball_uuid);
         this.x = x;
@@ -220,11 +268,18 @@ class Player extends AcGameObject {
         this.is_attacked(angle, damage);
     }
 
+    receive_frozen(x, y, ball_uuid, attacker) {
+        attacker.destroy_frozenball(ball_uuid);
+        this.x = x;
+        this.y = y;
+        this.is_frozen();
+    }
+
     update() {
         this.spent_time += this.timedelta / 1000;
 
         this.update_win();
-
+        this.update_frozen_time();
         if (this.character === "me" && this.playground.state === "fighting") {
             this.update_coldtime();
         }
@@ -240,6 +295,11 @@ class Player extends AcGameObject {
         }
     }
 
+    update_frozen_time() {
+        this.frozen_time -= this.timedelta / 1000;
+        this.frozen_time = Math.max(this.frozen_time, 0);
+    }
+
     update_coldtime() {
 
         // fireball
@@ -249,14 +309,19 @@ class Player extends AcGameObject {
         // blink
         this.blink_coldtime -= this.timedelta / 1000;
         this.blink_coldtime = Math.max(this.blink_coldtime, 0);
+
+        // frozenball
+        this.frozenball_coldtime -= this.timedelta / 1000;
+        this.frozenball_coldtime = Math.max(this.frozenball_coldtime, 0);
     }
 
     update_move() {  // 更新玩家移动
-        if (this.character === "robot" && this.spent_time > 4 && Math.random() < 1 / 300.0) {
+        if (this.character === "robot" && this.spent_time > 4 && Math.random() < 1 / 300.0) { // 机器人随机攻击
             let player = this.playground.players[Math.floor(Math.random() * this.playground.players.length)];
             let tx = player.x + player.speed * this.vx * this.timedelta / 1000 * 0.3;
             let ty = player.y + player.speed * this.vy * this.timedelta / 1000 * 0.3;
             this.shoot_fireball(tx, ty);
+            this.shoot_frozenball(tx, ty);
         }
 
         if (this.damage_speed > this.eps) {
@@ -269,7 +334,7 @@ class Player extends AcGameObject {
             if (this.move_length < this.eps) {
                 this.move_length = 0;
                 this.vx = this.vy = 0;
-                if (this.character === "robot") {
+                if (this.character === "robot" && this.frozen_time < this.eps) { // 机器人随机移动
                     let tx = Math.random() * this.playground.width / this.playground.scale;
                     let ty = Math.random() * this.playground.height / this.playground.scale;
                     this.move_to(tx, ty);
@@ -300,16 +365,31 @@ class Player extends AcGameObject {
             this.ctx.fill();
         }
 
+        if (this.frozen_time > this.eps) {
+            this.render_frozen_time();
+        }
+
         if (this.character === "me" && this.playground.state === "fighting") {
             this.render_skill_coldtime();
         }
+    }
+
+    render_frozen_time() {
+        let scale = this.playground.scale;
+        let x = this.x, y = this.y, r = this.radius;
+        this.ctx.beginPath();
+        this.ctx.moveTo(x * scale, y * scale);
+        this.ctx.arc(x * scale, y * scale, r * scale, 0 - Math.PI / 2, Math.PI * 2 * (1 - this.frozen_time / 2) - Math.PI / 2, true);
+        this.ctx.lineTo(x * scale, y * scale);
+        this.ctx.fillStyle = "rgba(175, 238, 238, 0.5)"; // 175,238,238
+        this.ctx.fill();
     }
 
     render_skill_coldtime() {
         let scale = this.playground.scale;
 
         // fireball
-        let x = 1.5, y = 0.9, r = 0.04;
+        let x = 1.46, y = 0.9, r = 0.04;
 
         this.ctx.save();
         this.ctx.beginPath();
@@ -329,7 +409,7 @@ class Player extends AcGameObject {
         }
 
         // blink
-        x = 1.62, y = 0.9, r = 0.04;
+        x = 1.58, y = 0.9, r = 0.04;
 
         this.ctx.save();
         this.ctx.beginPath();
@@ -343,6 +423,26 @@ class Player extends AcGameObject {
             this.ctx.beginPath();
             this.ctx.moveTo(x * scale, y * scale);
             this.ctx.arc(x * scale, y * scale, r * scale, 0 - Math.PI / 2, Math.PI * 2 * (1 - this.blink_coldtime / 5) - Math.PI / 2, true);
+            this.ctx.lineTo(x * scale, y * scale);
+            this.ctx.fillStyle = "rgba(0, 0, 255, 0.5)";
+            this.ctx.fill();
+        }
+
+        // frozenball
+        x = 1.70, y = 0.9, r = 0.04;
+
+        this.ctx.save();
+        this.ctx.beginPath();
+        this.ctx.arc(x * scale, y * scale, r * scale, 0, Math.PI * 2, false);
+        this.ctx.stroke();
+        this.ctx.clip();
+        this.ctx.drawImage(this.frozenball_img, (x - r) * scale, (y - r) * scale, r * 2 * scale, r * 2 * scale);
+        this.ctx.restore();
+
+        if (this.frozenball_coldtime > this.eps) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(x * scale, y * scale);
+            this.ctx.arc(x * scale, y * scale, r * scale, 0 - Math.PI / 2, Math.PI * 2 * (1 - this.frozenball_coldtime / 5) - Math.PI / 2, true);
             this.ctx.lineTo(x * scale, y * scale);
             this.ctx.fillStyle = "rgba(0, 0, 255, 0.5)";
             this.ctx.fill();
