@@ -33,15 +33,15 @@ class Player extends AcGameObject {
         if (this.character === "me") {
             this.fireball_coldtime = 3; // 单位：秒
             this.fireball_img = new Image();
-            this.fireball_img.src = "https://cdn.acwing.com/media/article/image/2021/12/02/1_9340c86053-fireball.png";
+            this.fireball_img.src = "https://app250.acapp.acwing.com.cn/static/image/playground/skill/fireball.png";
 
             this.blink_coldtime = 5;
             this.blink_img = new Image();
-            this.blink_img.src = "https://cdn.acwing.com/media/article/image/2021/12/02/1_daccabdc53-blink.png";
+            this.blink_img.src = "https://app250.acapp.acwing.com.cn/static/image/playground/skill/blink.png";
 
             this.frozenball_coldtime = 5;
             this.frozenball_img = new Image();
-            this.frozenball_img.src = "https://cdn.acwing.com/media/article/image/2021/12/02/1_9340c86053-fireball.png";
+            this.frozenball_img.src = "https://app250.acapp.acwing.com.cn/static/image/playground/skill/frozenball.png";
         }
     }
 
@@ -165,7 +165,7 @@ class Player extends AcGameObject {
         let color = "orange";
         let speed = 0.5;
         let move_length = 1;
-        let fireball = new FireBall(this.playground, this, x, y, radius, vx, vy, color, speed, move_length, 0.005);
+        let fireball = new FireBall(this.playground, this, x, y, radius, vx, vy, color, speed, move_length, 0.01);
         this.fireballs.push(fireball);
 
         if (this.username !== "龔")
@@ -316,11 +316,17 @@ class Player extends AcGameObject {
     }
 
     update_move() {  // 更新玩家移动
-        if (this.character === "robot" && this.spent_time > 4 && Math.random() < 1 / 300.0) { // 机器人随机攻击
+        if (this.character === "robot" && this.spent_time > 4 && Math.random() < 1 / 300.0) { // 机器人随机发火球
             let player = this.playground.players[Math.floor(Math.random() * this.playground.players.length)];
             let tx = player.x + player.speed * this.vx * this.timedelta / 1000 * 0.3;
             let ty = player.y + player.speed * this.vy * this.timedelta / 1000 * 0.3;
             this.shoot_fireball(tx, ty);
+        }
+
+        if (this.character === "robot" && this.spent_time > 4 && Math.random() < 1 / 300.0) { // 机器人随机发冰球
+            let player = this.playground.players[Math.floor(Math.random() * this.playground.players.length)];
+            let tx = player.x + player.speed * this.vx * this.timedelta / 1000 * 0.3;
+            let ty = player.y + player.speed * this.vy * this.timedelta / 1000 * 0.3;
             this.shoot_frozenball(tx, ty);
         }
 
